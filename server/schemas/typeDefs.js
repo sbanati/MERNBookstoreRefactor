@@ -24,11 +24,12 @@ const typeDefs = gql`
     token: ID!
     user: User
   }
-
   type Query {
     me: User
-
-
+    users: [User]
+    user(username: String!): User
+  }
+  
   input BookInput {
     authors: [String]
     description: String
