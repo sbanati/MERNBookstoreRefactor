@@ -8,8 +8,11 @@ import {
   Row
 } from 'react-bootstrap';
 
+// import hooks for mutations and custom mutation 
+import { useMutation } from "@apollo/react-hooks";
+import { SAVE_BOOK } from "../utils/mutations";
 import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
+import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
@@ -59,12 +62,16 @@ const SearchBooks = () => {
     }
   };
 
-  // create function to handle saving a book to our database
+  // execute SAVE_BOOK mutation, return -saveBook function to execute mutation, and error object
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
+
+
+  // create function to handle the process of saving a book to our database
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
 
-    // get token
+    // Check if user is logged in by retrieving the auth token, if !truthy then exit function
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
     if (!token) {
@@ -72,13 +79,17 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await saveBook(bookToSave, token);
-
-      if (!response.ok) {
+      // execute saveBook mutation and pass in the variable data from the bookInput and result stored in data obj.
+      const { data } = await saveBook({
+        variables: { bookInput: bookToSave },
+      });
+      console.log(data);
+      // if error during mutation exec, throw error
+      if (error) {
         throw new Error('something went wrong!');
       }
 
-      // if book successfully saves to user's account, save book id to state
+      // If the mutation executes successfully, it updates the state to include the newly saved bookId.
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
       console.error(err);
