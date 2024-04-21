@@ -1,45 +1,48 @@
 const express = require('express');
 const path = require('path');
-// import Apollo Server
-const { ApolloServer } = require('apollo-server-express');
-
-// import middleware function for authenticating
+const { expressMiddleware } = require('@apollo/server/express4');
+const { ApolloServer } = require('@apollo/server');
 const { authMiddleware } = require('./utils/auth');
-
-//import typeDefs and resolvers
-const {typeDefs, resolvers } = require('./schemas')
-
+const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// create a new Apollo server and pass schema data 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: authMiddleware,
 });
-
-server.applyMiddleware({ app });
-
-
+const startServer = async () => {
+  
+  // Start the Apollo Server
+  await server.start();
+// Express middleware for parsing URL-encoded and JSON request bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
+app.use('/graphql', expressMiddleware(server, {
+  context: authMiddleware
+}));
+ 
+  // Serve static assets in production
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+    
+
+    // Wildcard GET route to serve React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
 }
-
-
-// wildcard get route to any location on the server that doesn't have an explicit route defined
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
-});
 
 db.once('open', () => {
   app.listen(PORT, () => {
-    console.log(`🌍 Now listening on localhost:${PORT}`);
-    console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
+    console.log(`API server running on port ${PORT}!`);
+    console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
   });
 });
+  
+ 
+};
+
+startServer();

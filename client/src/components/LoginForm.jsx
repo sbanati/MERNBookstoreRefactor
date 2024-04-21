@@ -32,10 +32,10 @@ const LoginForm = () => {
       const { data } = await login({
         variables: { ...userFormData}
       });
-
+      console.log(data)
       // Store the token in local storage
       Auth.login(data.login.token);
-      console.log(data)
+      
     } catch (err) {
       console.error(err);
       setShowAlert(true);

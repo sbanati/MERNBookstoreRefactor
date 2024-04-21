@@ -1,5 +1,5 @@
 // Import useQuery and useMutation from Apollo Client
-import { useMutation, useQuery } from "@apollo/client;";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   Container,
   Card,

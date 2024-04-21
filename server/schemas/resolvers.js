@@ -7,6 +7,7 @@ const resolvers = {
   Query: {
     // Resolver for "me" query
     me: async (parent, args, context) => {
+      
       if (context.user) {
         // Retrieve user data from the database based on the context
         const userData = await User.findOne({ _id: context.user._id })
@@ -17,19 +18,13 @@ const resolvers = {
       // Throw an auth error if the user is not logged in
       throw new AuthenticationError("Not logged in");
     },
-    users: async () => {
-      return User.find().select("-__v -password").populate("book");
-    },
-    user: async (parent, { username }) => {
-      return User.findOne({ username })
-        .select("-__v -password")
-        .populate("book");
-    },
+    
   },
 
   Mutation: {
     // Resolver for login mutation
     login: async (parent, { email, password }) => {
+      console.log(email, password);
       // Find user by email in the database, throw an auth error if no user is found with the given email
       const user = await User.findOne({ email });
       if (!user) {
